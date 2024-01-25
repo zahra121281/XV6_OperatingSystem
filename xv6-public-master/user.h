@@ -1,6 +1,7 @@
+#ifndef __USER__
+
 struct stat;
 struct rtcdate;
-
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -23,6 +24,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int halt(void); 
 
 // ulib.c
 int stat(const char*, struct stat*);
@@ -37,3 +39,5 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+#endif 

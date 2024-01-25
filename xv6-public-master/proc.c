@@ -183,7 +183,6 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
-
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -224,6 +223,7 @@ fork(void)
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
+
 void
 exit(void)
 {
@@ -241,7 +241,6 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
-
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -260,7 +259,6 @@ exit(void)
         wakeup1(initproc);
     }
   }
-
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();

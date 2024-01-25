@@ -310,6 +310,66 @@ wait(void)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+int 
+clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *second_argument )
+{
+  int i, thread_id;
+  struct proc *np;
+  struct proc *curproc = myproc();
+  
+  void * stack_first_arg;
+  void * stack_second_arg;
+  void * stack_return;
+
+  // Allocate process.
+  if((np = allocproc()) == 0)
+    return -1;
+
+  // Copy process data to the new thread
+  
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+  np->pgdir = curproc->pgdir;
+ //---------------------------- 
+
+  
+  stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
+  stack_first_arg = stack + PGSIZE - 2 * sizeof(void *);
+  stack_return = stack + PGSIZE - 3 * sizeof(void *);
+  *(uint*)stack_first_arg = (uint)first_argumant;
+  *(uint*)stack_second_arg = (uint)second_argument;
+  *(uint*)stack_return = 0xFFFFFFF;
+  
+  np->tf->esp = (uint) stack;
+  np->stack = stack;
+  np->tf->esp += PGSIZE - 3 * sizeof(void*);
+  np->tf->ebp = np->tf->esp;
+  np->tf->eip = (uint) function;
+//--------------------------------------
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+ 
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  thread_id=np->pid;
+
+  return thread_id;
+  //return np->pid;
+}
+
 
 //PAGEBREAK: 42
 // Per-CPU process scheduler.

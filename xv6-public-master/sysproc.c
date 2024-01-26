@@ -90,6 +90,7 @@ sys_uptime(void)
   return xticks;
 }
 
+
 int sys_clone(void)
 {
   int stack,function, arg1, arg2;
@@ -105,4 +106,11 @@ int sys_join(void)
   stackArg = argint(0, &stackArg);
   stack = (void**) stackArg;
   return join(stack);
+
+int
+sys_halt(void)
+{
+  outb(0xf4, 0x00);
+  return 0;
+
 }

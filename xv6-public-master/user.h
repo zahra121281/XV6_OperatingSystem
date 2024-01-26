@@ -1,5 +1,8 @@
+#ifndef __USER__
+
 struct stat;
 struct rtcdate;
+
 
 struct stat;
 struct rtcdate;
@@ -31,8 +34,12 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+
 int clone(void*,void(*fuction)(void*, void*), void*, void*);
 int join(void**);
+
+
+int halt(void); 
 
 
 // ulib.c
@@ -48,9 +55,12 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
 int thread_create(void (*function)(void *,void*), void * arg1, void * arg2);
 int thread_join(); 
 int lock_init(lock_t *lk);
 void lock_acquire(lock_t *lk);
 void lock_release(lock_t *lk);
+
+#endif 
 

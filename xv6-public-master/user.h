@@ -3,13 +3,9 @@
 struct stat;
 struct rtcdate;
 
-
-struct stat;
-struct rtcdate;
 typedef struct __lock_t{
   uint flag;
 }lock_t;
-
 
 
 // system calls
@@ -34,11 +30,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-
 int clone(void*,void(*fuction)(void*, void*), void*, void*);
 int join(void**);
-
-
 int halt(void); 
 
 

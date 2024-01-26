@@ -106,6 +106,7 @@ int sys_join(void)
   stackArg = argint(0, &stackArg);
   stack = (void**) stackArg;
   return join(stack);
+}
 
 int
 sys_halt(void)

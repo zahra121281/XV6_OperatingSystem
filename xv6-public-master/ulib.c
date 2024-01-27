@@ -2,7 +2,13 @@
 #include "stat.h"
 #include "fcntl.h"
 #include "user.h"
+#include "mmu.h"
 #include "x86.h"
+#include "param.h"
+#include "types.h"
+#include "fcntl.h"
+#include "syscall.h"
+#include "memlayout.h"
 
 char*
 strcpy(char *s, const char *t)
@@ -103,4 +109,18 @@ memmove(void *vdst, const void *vsrc, int n)
   while(n-- > 0)
     *dst++ = *src++;
   return vdst;
+}
+
+int thread_create(void (*func)(void *, void *), void* arg1, void* arg2)
+{
+  void* stack;
+  stack = malloc(PGSIZE);
+  return clone(stack,func, arg1, arg2);
+}
+
+int thread_join()
+{
+  void * stackPtr;
+  int x = join(&stackPtr);
+  return x;
 }

@@ -374,6 +374,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   np->parent = curproc;
   *np->tf = *curproc->tf;
   np->pgdir = curproc->pgdir;
+  np->is_thread=1;
  //---------------------------- 
   
   stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
@@ -420,7 +421,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p , *child_p;
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -431,19 +432,51 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      //cprintf("state of %s shell: %s",p->name,p->state);
+      if(p->state != RUNNABLE )//&& !(p->state = SLEEPING && p->num_child !=0 ))    // shak daram
         continue;
+      //cprintf("%d in thread %s --- parent name: %s\n",p->parent,p->name,p->parent->name);
+      if( p->is_thread == 1 )  // thread 
+      {
+        // if it is its turn then execute 
+        
+        continue;
+      } 
+      // parent 
+      if ( p->num_child > 0 && p->turn != 0 )
+      {
+        int cnt = 1; 
 
+        for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
+        {
+          cprintf("for loop");
+          if ( child_p->parent == p )
+          {
+
+            if ( cnt == p->turn )
+            {
+              // code exe
+              p->turn = (p->turn+1)%p->num_child; 
+              // if( p->turn == 0 )
+              //   p->turn=1 ; 
+              p = child_p ; 
+              break;  
+            }
+            cnt++ ; 
+          }
+        }
+      }
+      
+      //cprintf("num_child %d: panic: ", p->num_child);
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      c->proc = p;
+      c->proc=p;
       switchuvm(p);
       p->state = RUNNING;
-
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
@@ -452,6 +485,7 @@ scheduler(void)
 
   }
 }
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores

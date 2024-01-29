@@ -4,6 +4,22 @@
 #include "fcntl.h"
 
 
+lock_t* lock_thread;
+
+
+
+void add(void* arg1, void* arg2) {
+  lock_acquire(lock_thread);
+  
+  int num1 = *(int*)arg1;
+  int num2 = *(int*)arg2;
+  printf(1, "num1: %d, num2: %d, this should print %d\n", num1, num2, num1 + num2);
+  sleep(20);
+  
+  lock_release(lock_thread);
+  exit();
+}
+
 void f1(void* arg1, void* arg2) {
   int num1 = *(int*)arg1;
   int num2 = *(int*)arg2;
@@ -35,13 +51,14 @@ void f1(void* arg1, void* arg2) {
 int
 main(int argc, char *argv[])
 {
+  lock_init(lock_thread);
   int arg1 = 9, arg2 = 1;
   printf(1, "test executing threads without lock :\n");
-  thread_create(&f1, (void *)&arg1, (void *)&arg2);
+  thread_create(&add, (void *)&arg1, (void *)&arg2);
   int arg3 = 4 , arg4 = 2;
-  thread_create(&f1, (void *)&arg3, (void *)&arg4);
+  thread_create(&add, (void *)&arg3, (void *)&arg4);
   int arg5 = 7 ,  arg6 = 4;
-  thread_create(&f1, (void *)&arg5, (void *)&arg6);
+  thread_create(&add, (void *)&arg5, (void *)&arg6);
   thread_join();
   thread_join();
   thread_join();

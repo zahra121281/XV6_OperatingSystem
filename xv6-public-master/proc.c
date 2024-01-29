@@ -241,6 +241,7 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
+
   begin_op();
   iput(curproc->cwd);
   end_op();
@@ -259,17 +260,17 @@ exit(void)
         wakeup1(initproc);
     }
   }
-  
   if(curproc->is_thread == 1)
   {
-    cprintf("make the process zombie\n"); 
-    curproc->parent->num_child--; 
+    cprintf("thread in exit state\n"); 
+    //curproc->parent->num_child--; 
   }
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-
+  cprintf("in exit state \n") ; 
   sched();
   panic("zombie exit");
+
 }
 
 // Wait for a child process to exit and return its pid.
@@ -329,12 +330,11 @@ join(void** stack)
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->is_thread== 0 )//p->pgdir != p->parent->pgdir )
+      if(p->parent != curproc || p->pgdir != p->parent->pgdir )//p->pgdir != p->parent->pgdir )
         continue;
 
       havekids = 1;
       if(p->state == ZOMBIE){
-        
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -349,7 +349,7 @@ join(void** stack)
         return pid;
       }
     }
-    cprintf("after for in join \n") ; 
+    cprintf("in join :**** state :%d p->turn : %d \n",p->state ,p->turn ) ; 
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
@@ -445,8 +445,19 @@ scheduler(void)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 
-      if(p->state != RUNNABLE )//|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
-        continue;
+
+      //|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
+      if(p->state != RUNNABLE )
+      {
+        if(p->state == SLEEPING && p->num_child> 0 ) //&& p->turn==0 )
+        {
+          //p->turn = 1 ; 
+          cprintf("hereeeeeeeeeee\n") ; 
+        }
+        else
+          continue;
+
+      }
 
       if( p->is_thread == 1 )  // thread 
       {
@@ -454,19 +465,18 @@ scheduler(void)
         continue;
       } 
       // parent 
-      //cprintf("after you eat shettt ***********************\n") ; 
-      if ( (p->num_child > 0 &&  p->turn != 0) || (p->turn== 0 && p->state==SLEEPING && p->num_child>0) )
+      //cprintf("state :%d cnt==p->turn : %d \n",p->state ,p->turn ) ; 
+      if ( (p->num_child > 0 &&  p->turn != 0) )
       {
         int cnt = 1; 
         for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
         {
           if ( child_p->parent == p  ) // && child_p->state == RUNNABLE
           {
-            if ( cnt == p->turn )
+            if ( cnt == p->turn && child_p->state == RUNNABLE )
             {
-              cprintf("state :%d cnt==p->turn : %d , cnt = %d\n",child_p->state ,p->turn , cnt) ; 
+              cprintf("child state :%d parent turn : %d , cnt = %d\n",child_p->state ,p->turn , cnt) ; 
               p->turn = (p->turn+1)%(p->num_child+1) ; 
-
               p = child_p ; 
               break;  
             }

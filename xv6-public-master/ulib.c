@@ -138,4 +138,3 @@ void lock_acquire(lock_t *lk){
 void lock_release(lock_t *lk){
 	xchg(&lk->flag, 0);
 }
-

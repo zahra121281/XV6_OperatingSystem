@@ -10,13 +10,12 @@ lock_t* lock_thread;
 
 void add(void* arg1, void* arg2) {
   lock_acquire(lock_thread);
-  
   int num1 = *(int*)arg1;
   int num2 = *(int*)arg2;
   printf(1, "this should print %d\n ", num1 + num2);
   sleep(50);
-  
   lock_release(lock_thread);
+  printf(1, "this should print %d\n ", num1 + num2);
   exit();
 }
 

@@ -359,7 +359,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   int i, thread_id;
   struct proc *np;
   struct proc *curproc = myproc();
-  
+  cprintf("created thread");
   void * stack_first_arg;
   void * stack_second_arg;
   void * stack_return;
@@ -375,6 +375,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   *np->tf = *curproc->tf;
   np->pgdir = curproc->pgdir;
   np->is_thread=1;
+  np->parent->num_child+=1;
  //---------------------------- 
   
   stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
@@ -405,6 +406,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   np->state = RUNNABLE;
 
   release(&ptable.lock);
+  cprintf("finished thread");
   return thread_id;
 
 }
@@ -433,7 +435,7 @@ scheduler(void)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       //cprintf("state of %s shell: %s",p->name,p->state);
-      if(p->state != RUNNABLE )//&& !(p->state = SLEEPING && p->num_child !=0 ))    // shak daram
+      if(p->state != RUNNABLE )//|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
         continue;
       //cprintf("%d in thread %s --- parent name: %s\n",p->parent,p->name,p->parent->name);
       if( p->is_thread == 1 )  // thread 
@@ -443,8 +445,11 @@ scheduler(void)
         continue;
       } 
       // parent 
+      cprintf("befor if\n");
+      cprintf("parent process name is : %s and number of children is %d", p->name,p->num_child);
       if ( p->num_child > 0 && p->turn != 0 )
       {
+        cprintf("in if befor loop");
         int cnt = 1; 
 
         for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
@@ -458,7 +463,7 @@ scheduler(void)
               // code exe
               p->turn = (p->turn+1)%p->num_child; 
               // if( p->turn == 0 )
-              //   p->turn=1 ; 
+              //    p->turn=1 ; 
               p = child_p ; 
               break;  
             }

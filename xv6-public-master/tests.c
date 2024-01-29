@@ -59,7 +59,9 @@ main(int argc, char *argv[])
   thread_create(&add, (void *)&arg3, (void *)&arg4);
   int arg5 = 7 ,  arg6 = 4;
   thread_create(&add, (void *)&arg5, (void *)&arg6);
+  printf(1 , "before first join") ; 
   thread_join();
+  printf(1 , "after first join") ; 
   thread_join();
   thread_join();
   exit();

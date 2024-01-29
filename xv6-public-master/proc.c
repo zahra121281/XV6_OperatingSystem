@@ -318,15 +318,16 @@ join(void** stack)
   
   acquire(&ptable.lock);
   for(;;){
+    cprintf("in for in join \n") ; 
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->pgdir != p->parent->pgdir )
+      if(p->parent != curproc || p->is_thread== 0 )//p->pgdir != p->parent->pgdir )
         continue;
 
       havekids = 1;
       if(p->state == ZOMBIE){
-        
+        cprintf("in if in join \n") ;  
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -359,7 +360,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   int i, thread_id;
   struct proc *np;
   struct proc *curproc = myproc();
-  cprintf("created thread");
+  //cprintf("created thread");
   void * stack_first_arg;
   void * stack_second_arg;
   void * stack_return;
@@ -369,7 +370,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
     return -1;
 
   // Copy process data to the new thread
-  cprintf("clone first ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
+  //cprintf("clone first ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -392,7 +393,6 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   np->tf->esp += PGSIZE - 3 * sizeof(void*);
   np->tf->ebp = np->tf->esp;
   np->tf->eip = (uint) function;    // start point 
-
 //--------------------------------------
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -408,7 +408,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   np->state = RUNNABLE;
 
   release(&ptable.lock);
-  cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
+  //cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   return thread_id;
 
 }
@@ -440,19 +440,21 @@ scheduler(void)
       if(p->state != RUNNABLE )//|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
         continue;
 
-      cprintf("parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",p->state,p->turn,p->name,p->num_child);
+      //cprintf("parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",p->state,p->turn,p->name,p->num_child);
       // if(!(p->state == SLEEPING && p->turn > 0) )
       //   continue; 
       //cprintf("%d in thread %s --- parent name: %s\n",p->parent,p->name,p->parent->name);
+      //cprintf("before you eat shettt ***********************\n") ; 
       if( p->is_thread == 1 )  // thread 
       {
+        //cprintf("midle you eat shettt ***********************\n") ; 
         continue;
       } 
       // parent 
-      
-      
+      //cprintf("after you eat shettt ***********************\n") ; 
       if ( (p->num_child > 0 &&  p->turn != 0) || (p->turn== 0 && p->state==SLEEPING && p->num_child>0) )
       {
+        //cprintf("finish you eat shettt ***********************\n") ; 
         //cprintf("in if befor loop");
         int cnt = 1; 
         for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
@@ -473,7 +475,7 @@ scheduler(void)
           }
         }
       }
-      cprintf("after if******************* \n") ; 
+      //cprintf("after if******************* \n") ; 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.

@@ -122,6 +122,7 @@ int thread_join()
 {
   void * stackPtr;
   int x = join(&stackPtr);
+  
   return x;
 }
 int lock_init(lock_t *lk)

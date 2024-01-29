@@ -259,9 +259,15 @@ exit(void)
         wakeup1(initproc);
     }
   }
+  
+  if(curproc->is_thread == 1)
+  {
+    cprintf("make the process zombie\n"); 
+    curproc->parent->num_child--; 
+  }
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  cprintf("make the process zombie\n"); 
+
   sched();
   panic("zombie exit");
 }
@@ -438,15 +444,10 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      //cprintf("state of %s shell: %s",p->name,p->state);
+
       if(p->state != RUNNABLE )//|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
         continue;
 
-      //cprintf("parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",p->state,p->turn,p->name,p->num_child);
-      // if(!(p->state == SLEEPING && p->turn > 0) )
-      //   continue; 
-      //cprintf("%d in thread %s --- parent name: %s\n",p->parent,p->name,p->parent->name);
-      //cprintf("before you eat shettt ***********************\n") ; 
       if( p->is_thread == 1 )  // thread 
       {
         //cprintf("midle you eat shettt ***********************\n") ; 
@@ -456,21 +457,16 @@ scheduler(void)
       //cprintf("after you eat shettt ***********************\n") ; 
       if ( (p->num_child > 0 &&  p->turn != 0) || (p->turn== 0 && p->state==SLEEPING && p->num_child>0) )
       {
-        //cprintf("finish you eat shettt ***********************\n") ; 
-        //cprintf("in if befor loop");
         int cnt = 1; 
         for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
         {
-          // cprintf("for loop");
-          if ( child_p->parent == p )
+          if ( child_p->parent == p  ) // && child_p->state == RUNNABLE
           {
             if ( cnt == p->turn )
             {
-              // code exe
-              p->turn = (p->turn+1)%p->num_child; 
-              if( p->turn == 0 )
-                p->turn=1 ; 
-              cprintf("in if cnt==p->turn , cnt = %d\n" , cnt ) ; 
+              cprintf("state :%d cnt==p->turn : %d , cnt = %d\n",child_p->state ,p->turn , cnt) ; 
+              p->turn = (p->turn+1)%(p->num_child+1) ; 
+
               p = child_p ; 
               break;  
             }
@@ -478,7 +474,7 @@ scheduler(void)
           }
         }
       }
-      //cprintf("after if******************* \n") ; 
+   
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.

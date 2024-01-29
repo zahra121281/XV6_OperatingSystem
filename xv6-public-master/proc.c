@@ -369,13 +369,15 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
     return -1;
 
   // Copy process data to the new thread
-  
+  cprintf("clone first ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
   np->pgdir = curproc->pgdir;
   np->is_thread=1;
   np->parent->num_child+=1;
+  if ( curproc->turn == 0 )
+    curproc->turn=1 ; 
  //---------------------------- 
   
   stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
@@ -406,7 +408,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   np->state = RUNNABLE;
 
   release(&ptable.lock);
-  cprintf("finished thread");
+  cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   return thread_id;
 
 }
@@ -437,27 +439,27 @@ scheduler(void)
       //cprintf("state of %s shell: %s",p->name,p->state);
       if(p->state != RUNNABLE )//|| !(p->state = SLEEPING || p->num_child !=0 ))    // shak daram
         continue;
+
+      cprintf("parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",p->state,p->turn,p->name,p->num_child);
+      // if(!(p->state == SLEEPING && p->turn > 0) )
+      //   continue; 
       //cprintf("%d in thread %s --- parent name: %s\n",p->parent,p->name,p->parent->name);
       if( p->is_thread == 1 )  // thread 
       {
-        // if it is its turn then execute 
-        
         continue;
       } 
       // parent 
-      cprintf("befor if\n");
-      cprintf("parent process name is : %s and number of children is %d", p->name,p->num_child);
-      if ( p->num_child > 0 && p->turn != 0 )
+      
+      
+      if ( (p->num_child > 0 &&  p->turn != 0) || (p->turn== 0 && p->state==SLEEPING && p->num_child>0) )
       {
-        cprintf("in if befor loop");
+        //cprintf("in if befor loop");
         int cnt = 1; 
-
         for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
         {
-          cprintf("for loop");
+          // cprintf("for loop");
           if ( child_p->parent == p )
           {
-
             if ( cnt == p->turn )
             {
               // code exe
@@ -471,9 +473,7 @@ scheduler(void)
           }
         }
       }
-      
-      //cprintf("num_child %d: panic: ", p->num_child);
-      
+      cprintf("after if******************* \n") ; 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.

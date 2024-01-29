@@ -261,6 +261,7 @@ exit(void)
   }
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  cprintf("make the process zombie\n"); 
   sched();
   panic("zombie exit");
 }
@@ -318,7 +319,7 @@ join(void** stack)
   
   acquire(&ptable.lock);
   for(;;){
-    cprintf("in for in join \n") ; 
+    
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -327,7 +328,7 @@ join(void** stack)
 
       havekids = 1;
       if(p->state == ZOMBIE){
-        cprintf("in if in join \n") ;  
+        
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -342,6 +343,7 @@ join(void** stack)
         return pid;
       }
     }
+    cprintf("after for in join \n") ; 
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
@@ -466,8 +468,9 @@ scheduler(void)
             {
               // code exe
               p->turn = (p->turn+1)%p->num_child; 
-              // if( p->turn == 0 )
-              //    p->turn=1 ; 
+              if( p->turn == 0 )
+                p->turn=1 ; 
+              cprintf("in if cnt==p->turn , cnt = %d\n" , cnt ) ; 
               p = child_p ; 
               break;  
             }

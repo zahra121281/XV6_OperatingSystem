@@ -14,7 +14,7 @@ void add(void* arg1, void* arg2) {
   int num1 = *(int*)arg1;
   int num2 = *(int*)arg2;
   printf(1, "num1: %d, num2: %d, this should print %d\n", num1, num2, num1 + num2);
-  sleep(20);
+  sleep(50);
   
   lock_release(lock_thread);
   exit();

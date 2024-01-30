@@ -292,7 +292,7 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        cprintf("pid of ZOMBIE : %d\n" , p->pid) ; 
+        //cprintf("pid of ZOMBIE : %d\n" , p->pid) ; 
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -446,6 +446,7 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      //cprintf("nameeeee %s , pid : %d\n" ,p->name , p->pid  ) ; 
       if(p->state != RUNNABLE )
       {
         if(p->state == SLEEPING  && p->num_child>0 ) //&& p->turn==0 )
@@ -466,14 +467,15 @@ scheduler(void)
         {
           if(p->state == SLEEPING )
             p->turn = 1 ; 
-          c->proc=p;
-          switchuvm(p);
-          p->state = RUNNING;
-          swtch(&(c->scheduler), p->context);
-          switchkvm();
+            c->proc=p;
+            cprintf("id of the executed process : %d\n" , p->pid ) ;
+            switchuvm(p);
+            p->state = RUNNING;
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
           // Process is done running for now.
           // It should have changed its p->state before coming back.
-          c->proc = 0;
+            c->proc = 0;
         }
         if ( p->turn > 0 )
         {

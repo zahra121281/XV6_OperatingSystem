@@ -49,7 +49,7 @@ main(int argc, char *argv[])
     thread_join();
     thread_join();
     printf(1 , "t1 : %d , t2 : %d , t3 : %d \n" , t1 , t2 , t3 );
-    wait() ; 
+    //wait() ; 
     printf(1, "after wait\n") ; 
     exit();
   }

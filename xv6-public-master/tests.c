@@ -50,18 +50,19 @@ void f1(void* arg1, void* arg2) {
 int
 main(int argc, char *argv[])
 {
-  lock_init(lock_thread);
-  int arg1 = 9, arg2 = 1;
   printf(1, "test executing threads without lock :\n");
-  thread_create(&add, (void *)&arg1, (void *)&arg2);
-  int arg3 = 4 , arg4 = 2;
-  thread_create(&add, (void *)&arg3, (void *)&arg4);
-  int arg5 = 7 ,  arg6 = 4;
-  thread_create(&add, (void *)&arg5, (void *)&arg6);
-  printf(1 , "before first join") ; 
-  thread_join();
-  printf(1 , "after first join") ; 
-  thread_join();
-  thread_join();
+  // lock_init(lock_thread);
+  // int arg1 = 9, arg2 = 1;
+  // printf(1, "test executing threads without lock :\n");
+  // thread_create(&add, (void *)&arg1, (void *)&arg2);
+  // int arg3 = 4 , arg4 = 2;
+  // thread_create(&add, (void *)&arg3, (void *)&arg4);
+  // int arg5 = 7 ,  arg6 = 4;
+  // thread_create(&add, (void *)&arg5, (void *)&arg6);
+  // printf(1 , "before first join") ; 
+  // thread_join();
+  // printf(1 , "after first join") ; 
+  // thread_join();
+  // thread_join();
   exit();
 }

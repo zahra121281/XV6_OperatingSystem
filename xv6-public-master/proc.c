@@ -260,14 +260,14 @@ exit(void)
         wakeup1(initproc);
     }
   }
-  if(curproc->is_thread == 1)
-  {
-    cprintf("thread in exit state\n"); 
-    //curproc->parent->num_child--; 
-  }
+  // if(curproc->is_thread == 1)
+  // {
+  //   cprintf("thread in exit state\n"); 
+  //   //curproc->parent->num_child--; 
+  // }
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  cprintf("in exit state \n") ; 
+  //cprintf("in exit state \n") ; 
   sched();
   panic("zombie exit");
 
@@ -292,6 +292,7 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
+        cprintf("pid of ZOMBIE : %d\n" , p->pid) ; 
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -333,8 +334,11 @@ join(void** stack)
       if(p->parent != curproc || p->pgdir != p->parent->pgdir|| p->is_thread==0 )//p->pgdir != p->parent->pgdir )
         continue;
 
+      
       havekids = 1;
       if(p->state == ZOMBIE){
+        p->parent->num_child-- ; 
+        p->is_thread=0 ; 
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -349,7 +353,7 @@ join(void** stack)
         return pid;
       }
     }
-    cprintf("in join :**** state :%d p->turn : %d \n",p->state ,p->turn ) ; 
+    //cprintf("in join :**** state :%d p->turn : %d \n",p->state ,p->turn ) ; 
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
@@ -433,83 +437,93 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
 void
 scheduler(void)
 {
-  struct proc *p , *child_p;
+  struct proc *p , *child_p ;
   struct cpu *c = mycpu();
   c->proc = 0;
-  uint thread_turn_error =0 ; 
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE )
       {
-     
-        if(p->state == SLEEPING  && p->turn>0 ) //&& p->turn==0 )
+        if(p->state == SLEEPING  && p->num_child>0 ) //&& p->turn==0 )
         {
-          //p->turn = 1 ; 
-          cprintf("hereeeeeeeeeee\n") ; 
+    
         }
         else
           continue;
       }
-      cprintf("miewwwwwwwwwwwww\n") ; 
       if( p->is_thread == 1 )  // thread 
       {
-        //cprintf("midle you eat shettt ***********************\n") ; 
         continue;
       } 
-      // parent 
-      //cprintf("state :%d cnt==p->turn : %d \n",p->state ,p->turn ) ; 
-      if ( (p->num_child > 0 &&  p->turn > 0) )
-      {
-        int cnt = 1; 
-        for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
-        {
-          if ( child_p->parent == p  ) // && child_p->state == RUNNABLE
-          {
-            if ( cnt == p->turn )
-            {
-              cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
-              if (child_p->state == RUNNABLE)
-              {
-                p->turn = (p->turn+1)%(p->num_child+1) ; 
-                p = child_p ; 
-                break;  
 
-              }  // add a condition for zombie children
-              else{
-                thread_turn_error=1 ; 
-                break ; 
-                
+      if ( p->num_child > 0 )
+      {
+        if ( p->turn == 0 )
+        {
+          if(p->state == SLEEPING )
+            p->turn = 1 ; 
+          c->proc=p;
+          switchuvm(p);
+          p->state = RUNNING;
+          swtch(&(c->scheduler), p->context);
+          switchkvm();
+          // Process is done running for now.
+          // It should have changed its p->state before coming back.
+          c->proc = 0;
+        }
+        if ( p->turn > 0 )
+        {
+          int cnt = 1; 
+          for(child_p = ptable.proc; child_p < &ptable.proc[NPROC]; child_p++)
+          {
+            if ( child_p->parent == p && child_p->is_thread==1 ) // && child_p->state == RUNNABLE
+            {
+              if ( child_p->state == RUNNABLE )
+              {
+                if (cnt == p->turn)
+                {
+                  //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
+                  c->proc=child_p;
+                  switchuvm(child_p);
+                  child_p->state = RUNNING;
+                  swtch(&(c->scheduler), child_p->context);
+                  switchkvm();
+                  c->proc = 0;
+                  break;  
+                }  
+                cnt++ ; 
               }
             }
-            cnt++ ; 
           }
         }
+        p->turn = (p->turn+1)%(p->num_child+1) ; 
       }
-      if(thread_turn_error)
-        continue;
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc=p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+      else
+      {
+        c->proc=p;
+        switchuvm(p);
+        p->state = RUNNING;
+        swtch(&(c->scheduler), p->context);
+        switchkvm();
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+      }
     }
     release(&ptable.lock);
-
   }
 }
 
-
+ // add a condition for zombie children
+                // else{
+                //   thread_turn_error=1 ; 
+                //   break ; 
+                  
+                // }
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
@@ -617,7 +631,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
     {
-      cprintf("in WAKEUP1 :**** proc name : %s state :%d p->turn : %d \n",p->name,p->state ,p->turn ) ; 
+      //cprintf("in WAKEUP1 :**** proc name : %s state :%d p->turn : %d \n",p->name,p->state ,p->turn ) ; 
       p->state = RUNNABLE;
     }
 }

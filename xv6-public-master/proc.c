@@ -465,8 +465,8 @@ scheduler(void)
         {
           if(p->state == SLEEPING )
             p->turn = 1 ;
-          else{ 
-            SwichProc(p) ; 
+          //else{ 
+          SwichProc(p) ; 
             // c->proc=p;
             // switchuvm(p);
             // //if( p->pid > 2)
@@ -475,7 +475,7 @@ scheduler(void)
             // swtch(&(c->scheduler), p->context);
             // switchkvm();
             // c->proc = 0;
-          }
+          //}
         }
         if ( p->turn > 0 )
         {

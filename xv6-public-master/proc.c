@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "stddef.h"
 
 struct {
   struct spinlock lock;
@@ -384,17 +385,18 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   if ( curproc->turn == 0 )
     curproc->turn=1 ; 
  //---------------------------- 
-  
-  stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
-  stack_first_arg = stack + PGSIZE - 2 * sizeof(void *);
-  //stack_return = stack + PGSIZE - 3 * sizeof(void *);
+  size_t void_pointer_size = sizeof(void *);
+  //uintptr_t stack_plus_pgsz = (uintptr_t)stack + PGSIZE;
+  stack_second_arg = stack + PGSIZE - 1 * void_pointer_size;
+  stack_first_arg = stack + PGSIZE - 2 * void_pointer_size;
+  //stack_return = stack + PER_PAGE - 3 * sizeof(void *);
   *(uint*)stack_first_arg = (uint)first_argumant;
   *(uint*)stack_second_arg = (uint)second_argument;
   //*(uint*)stack_return = 0xAFAFAFA;
   
   np->tf->esp = (uint) stack;
   np->stack = stack;
-  np->tf->esp += PGSIZE - 3 * sizeof(void*);
+  np->tf->esp += PGSIZE - 3 * void_pointer_size;
   np->tf->ebp = np->tf->esp;
   np->tf->eip = (uint) function;    // start point 
 //--------------------------------------

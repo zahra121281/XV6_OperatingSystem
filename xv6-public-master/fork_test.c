@@ -10,7 +10,7 @@ void add(void* arg1, void* arg2) {
   int num1 = *(int*)arg1;
   int num2 = *(int*)arg2;
   printf(1, "this should print %d\n ", num1 + num2);
-  sleep(50);
+  sleep(10);
   lock_release(lock_thread); 
   exit();
 }
@@ -22,11 +22,8 @@ main(int argc, char *argv[])
   pid = fork() ; 
   if( pid > 0 )
   {
-    printf(1 , "id of fork child : %d\n" , pid ) ; 
-    for( int i=0 ; i < 10 ; i++ )
-    {
-        printf(1 , "in child process i : %d\n" , i ) ; 
-    }
+    
+    printf(1 , "in child process \n" ) ;
     exit() ; 
   }
   else if (pid < 0 )

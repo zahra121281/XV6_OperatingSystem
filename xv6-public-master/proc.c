@@ -440,6 +440,7 @@ scheduler(void)
   struct proc *p , *child_p ;
   struct cpu *c = mycpu();
   c->proc = 0;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -466,16 +467,15 @@ scheduler(void)
         if ( p->turn == 0 )
         {
           if(p->state == SLEEPING )
-            p->turn = 1 ; 
-            c->proc=p;
-            cprintf("id of the executed process : %d\n" , p->pid ) ;
-            switchuvm(p);
-            p->state = RUNNING;
-            swtch(&(c->scheduler), p->context);
-            switchkvm();
+            p->turn = 1 ;
+          c->proc=p;
+          switchuvm(p);
+          p->state = RUNNING;
+          swtch(&(c->scheduler), p->context);
+          switchkvm();
           // Process is done running for now.
           // It should have changed its p->state before coming back.
-            c->proc = 0;
+          c->proc = 0;
         }
         if ( p->turn > 0 )
         {

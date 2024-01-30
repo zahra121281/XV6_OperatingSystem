@@ -367,7 +367,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   //cprintf("created thread");
   void * stack_first_arg;
   void * stack_second_arg;
-  void * stack_return;
+  //void * stack_return;
 
   // Allocate process.
   if((np = allocproc()) == 0)
@@ -387,10 +387,10 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   
   stack_second_arg = stack + PGSIZE - 1 * sizeof(void *);
   stack_first_arg = stack + PGSIZE - 2 * sizeof(void *);
-  stack_return = stack + PGSIZE - 3 * sizeof(void *);
+  //stack_return = stack + PGSIZE - 3 * sizeof(void *);
   *(uint*)stack_first_arg = (uint)first_argumant;
   *(uint*)stack_second_arg = (uint)second_argument;
-  *(uint*)stack_return = 0xFFFFFFF;
+  //*(uint*)stack_return = 0xAFAFAFA;
   
   np->tf->esp = (uint) stack;
   np->stack = stack;
@@ -424,6 +424,20 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
+void 
+SwichProc(struct proc *p )
+{
+  struct cpu *c = mycpu();
+  c->proc=p;
+  switchuvm(p);
+  p->state = RUNNING;
+  cprintf("pid :%d \n" , p->pid )  ; 
+  swtch(&(c->scheduler), p->context);
+  switchkvm();
+  c->proc = 0;
+}
+
 void
 scheduler(void)
 {
@@ -452,14 +466,15 @@ scheduler(void)
           if(p->state == SLEEPING )
             p->turn = 1 ;
           else{ 
-            c->proc=p;
-            switchuvm(p);
-            //if( p->pid > 2)
-            cprintf("pid :%d \n" , p->pid )  ; 
-            p->state = RUNNING;
-            swtch(&(c->scheduler), p->context);
-            switchkvm();
-            c->proc = 0;
+            SwichProc(p) ; 
+            // c->proc=p;
+            // switchuvm(p);
+            // //if( p->pid > 2)
+            // cprintf("pid :%d \n" , p->pid )  ; 
+            // p->state = RUNNING;
+            // swtch(&(c->scheduler), p->context);
+            // switchkvm();
+            // c->proc = 0;
           }
         }
         if ( p->turn > 0 )
@@ -473,14 +488,15 @@ scheduler(void)
               {
                 if (cnt == p->turn)
                 {
+                  SwichProc(child_p) ; 
                   //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
-                  c->proc=child_p;
-                  switchuvm(child_p);
-                  cprintf("pid :%d \n" , child_p->pid )  ; 
-                  child_p->state = RUNNING;
-                  swtch(&(c->scheduler), child_p->context);
-                  switchkvm();
-                  c->proc = 0;
+                  // c->proc=child_p;
+                  // switchuvm(child_p);
+                  // cprintf("pid :%d \n" , child_p->pid )  ; 
+                  // child_p->state = RUNNING;
+                  // swtch(&(c->scheduler), child_p->context);
+                  // switchkvm();
+                  // c->proc = 0;
                   break;  
                 }  
                 cnt++ ; 
@@ -492,26 +508,21 @@ scheduler(void)
       }
       else
       {
-        c->proc=p;
-        switchuvm(p);
-        p->state = RUNNING;
-        //if( p->pid > 2)
-        cprintf("pid :%d \n" , p->pid )  ; 
-        swtch(&(c->scheduler), p->context);
-        switchkvm();
-        c->proc = 0;
+        SwichProc(p) ; 
+        // c->proc=p;
+        // switchuvm(p);
+        // p->state = RUNNING;
+        // cprintf("pid :%d \n" , p->pid )  ; 
+        // swtch(&(c->scheduler), p->context);
+        // switchkvm();
+        // c->proc = 0;
       }
     }
     release(&ptable.lock);
   }
 }
 
- // add a condition for zombie children
-                // else{
-                //   thread_turn_error=1 ; 
-                //   break ; 
-                  
-                // }
+ 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this

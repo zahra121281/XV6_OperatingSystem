@@ -13,7 +13,7 @@ void add(void* arg1, void* arg2) {
   int num1 = *(int*)arg1;
   int num2 = *(int*)arg2;
   printf(1, "this should print %d\n ", num1 + num2);
-  sleep(10);
+  //sleep(10);
   lock_release(lock_thread); 
   exit();
 }

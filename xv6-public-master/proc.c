@@ -324,7 +324,7 @@ join(void** stack)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  
+  cprintf("p id %d , pstate %d\n" , curproc->pid , curproc->state) ; 
   acquire(&ptable.lock);
   for(;;){
     
@@ -333,8 +333,6 @@ join(void** stack)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->parent != curproc || p->pgdir != p->parent->pgdir|| p->is_thread==0 )//p->pgdir != p->parent->pgdir )
         continue;
-
-      
       havekids = 1;
       if(p->state == ZOMBIE){
         p->parent->num_child-- ; 
@@ -416,9 +414,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
   thread_id=np->pid;
   acquire(&ptable.lock);
-
   np->state = RUNNABLE;
-
   release(&ptable.lock);
   //cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   return thread_id;
@@ -461,21 +457,21 @@ scheduler(void)
       {
         continue;
       } 
-
       if ( p->num_child > 0 )
       {
         if ( p->turn == 0 )
         {
           if(p->state == SLEEPING )
             p->turn = 1 ;
-          c->proc=p;
-          switchuvm(p);
-          p->state = RUNNING;
-          swtch(&(c->scheduler), p->context);
-          switchkvm();
-          // Process is done running for now.
-          // It should have changed its p->state before coming back.
-          c->proc = 0;
+          else{ 
+            c->proc=p;
+            switchuvm(p);
+            //cprintf("1- p id :%d \n" , p->pid )  ; 
+            p->state = RUNNING;
+            swtch(&(c->scheduler), p->context);
+            switchkvm();
+            c->proc = 0;
+          }
         }
         if ( p->turn > 0 )
         {
@@ -491,6 +487,7 @@ scheduler(void)
                   //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
                   c->proc=child_p;
                   switchuvm(child_p);
+                  //cprintf("2- p id :%d \n" , child_p->pid )  ; 
                   child_p->state = RUNNING;
                   swtch(&(c->scheduler), child_p->context);
                   switchkvm();
@@ -511,8 +508,6 @@ scheduler(void)
         p->state = RUNNING;
         swtch(&(c->scheduler), p->context);
         switchkvm();
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
         c->proc = 0;
       }
     }

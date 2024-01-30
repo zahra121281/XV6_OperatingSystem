@@ -469,14 +469,7 @@ scheduler(void)
             p->turn = 1 ;
           //else{ 
           SwichProc(p) ; 
-            // c->proc=p;
-            // switchuvm(p);
-            // //if( p->pid > 2)
-            // cprintf("pid :%d \n" , p->pid )  ; 
-            // p->state = RUNNING;
-            // swtch(&(c->scheduler), p->context);
-            // switchkvm();
-            // c->proc = 0;
+            
           //}
         }
         if ( p->turn > 0 )
@@ -492,13 +485,7 @@ scheduler(void)
                 {
                   SwichProc(child_p) ; 
                   //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
-                  // c->proc=child_p;
-                  // switchuvm(child_p);
-                  // cprintf("pid :%d \n" , child_p->pid )  ; 
-                  // child_p->state = RUNNING;
-                  // swtch(&(c->scheduler), child_p->context);
-                  // switchkvm();
-                  // c->proc = 0;
+                  
                   break;  
                 }  
                 cnt++ ; 
@@ -511,13 +498,7 @@ scheduler(void)
       else
       {
         SwichProc(p) ; 
-        // c->proc=p;
-        // switchuvm(p);
-        // p->state = RUNNING;
-        // cprintf("pid :%d \n" , p->pid )  ; 
-        // swtch(&(c->scheduler), p->context);
-        // switchkvm();
-        // c->proc = 0;
+        
       }
     }
     release(&ptable.lock);

@@ -18,19 +18,11 @@ void add(void* arg1, void* arg2) {
   exit();
 }
 
-void f1(void* arg1, void* arg2) {
-  int num1 = *(int*)arg1;
-  int num2 = *(int*)arg2;
-  printf( 1 , "num1: %d , num2 : %d this should print %d\n",num1 , num2 , num1+num2);
-  sleep(20);
-  exit();
-}
-
 int
 main(int argc, char *argv[])
 {
   lock_init(lock_thread) ; 
-  printf(1, "test executing threads without lock :\n");
+  printf(1, "test executing threads with lock :\n");
   int arg1 = 9, arg2 = 1 ; 
   thread_create(&add, (void *)&arg1, (void *)&arg2);
   int arg3 = 4 , arg4 = 2;
@@ -40,5 +32,5 @@ main(int argc, char *argv[])
   thread_join();
   thread_join();
   thread_join();
-  exit();
+  exit() ; 
 }

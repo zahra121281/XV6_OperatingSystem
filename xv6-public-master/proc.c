@@ -214,7 +214,7 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-
+  cprintf("in fork ** process with pid=%d created\n",np->pid);  
   release(&ptable.lock);
 
   return pid;
@@ -260,12 +260,7 @@ exit(void)
         wakeup1(initproc);
     }
   }
-  // if(curproc->is_thread == 1)
-  // {
-  //   cprintf("thread in exit state\n"); 
-  //   //curproc->parent->num_child--; 
-  // }
-  // Jump into the scheduler, never to return.
+
   curproc->state = ZOMBIE;
   //cprintf("in exit state \n") ; 
   sched();
@@ -292,7 +287,7 @@ wait(void)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        //cprintf("pid of ZOMBIE : %d\n" , p->pid) ; 
+        //cprintf("pid of ZOMBIE : %d name: %s\n", p->pid , p->name) ; 
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
@@ -324,14 +319,13 @@ join(void** stack)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  cprintf("p id %d , pstate %d\n" , curproc->pid , curproc->state) ; 
+  //cprintf("p id %d , pstate %d\n" , curproc->pid , curproc->state) ; 
   acquire(&ptable.lock);
   for(;;){
-    
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != curproc || p->pgdir != p->parent->pgdir|| p->is_thread==0 )//p->pgdir != p->parent->pgdir )
+      if(p->parent != curproc || p->pgdir != p->parent->pgdir || p->is_thread==0 )//p->pgdir != p->parent->pgdir )
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
@@ -415,10 +409,10 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   thread_id=np->pid;
   acquire(&ptable.lock);
   np->state = RUNNABLE;
+  cprintf("in clone *** process with pid=%d created\n",np->pid);  
   release(&ptable.lock);
   //cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   return thread_id;
-
 }
 
 
@@ -442,16 +436,10 @@ scheduler(void)
     sti();
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      //cprintf("nameeeee %s , pid : %d\n" ,p->name , p->pid  ) ; 
-      if(p->state != RUNNABLE )
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  
+      if(p->state != RUNNABLE && !(p->state == SLEEPING  && p->num_child>0 ))
       {
-        if(p->state == SLEEPING  && p->num_child>0 ) //&& p->turn==0 )
-        {
-    
-        }
-        else
-          continue;
+        continue;
       }
       if( p->is_thread == 1 )  // thread 
       {
@@ -466,7 +454,8 @@ scheduler(void)
           else{ 
             c->proc=p;
             switchuvm(p);
-            //cprintf("1- p id :%d \n" , p->pid )  ; 
+            //if( p->pid > 2)
+            cprintf("pid :%d \n" , p->pid )  ; 
             p->state = RUNNING;
             swtch(&(c->scheduler), p->context);
             switchkvm();
@@ -487,7 +476,7 @@ scheduler(void)
                   //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
                   c->proc=child_p;
                   switchuvm(child_p);
-                  //cprintf("2- p id :%d \n" , child_p->pid )  ; 
+                  cprintf("pid :%d \n" , child_p->pid )  ; 
                   child_p->state = RUNNING;
                   swtch(&(c->scheduler), child_p->context);
                   switchkvm();
@@ -506,6 +495,8 @@ scheduler(void)
         c->proc=p;
         switchuvm(p);
         p->state = RUNNING;
+        //if( p->pid > 2)
+        cprintf("pid :%d \n" , p->pid )  ; 
         swtch(&(c->scheduler), p->context);
         switchkvm();
         c->proc = 0;

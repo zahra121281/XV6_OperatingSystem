@@ -22,7 +22,7 @@ main(void)
     
     printf(1, "init: starting sh with pid : %d\n" ,getpid());
     pid = fork();
-    printf(1, "pid : %d \n" , pid );    
+    
     if(pid < 0){
       printf(1, "init: fork failed\n");
       exit();
@@ -32,7 +32,7 @@ main(void)
       printf(1, "init: exec sh failed\n");
       exit();
     }
-
+    // parent with pid == 0 
     while((wpid=wait()) >= 0 && wpid != pid)
       printf(1, "zombie!\n");
   }

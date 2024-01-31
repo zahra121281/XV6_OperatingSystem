@@ -390,7 +390,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   //uintptr_t stack_plus_pgsz = (uintptr_t)stack + PGSIZE;
   stack_second_arg = stack + PGSIZE - 1 * void_pointer_size;
   stack_first_arg = stack + PGSIZE - 2 * void_pointer_size;
-  //stack_return = stack + PER_PAGE - 3 * sizeof(void *);
+  //stack_return = stack + PGSIZE - 3 * sizeof(void *);
   *(uint*)stack_first_arg = (uint)first_argumant;
   *(uint*)stack_second_arg = (uint)second_argument;
   //*(uint*)stack_return = 0xAFAFAFA;
@@ -469,7 +469,7 @@ scheduler(void)
         {
           if(p->state == SLEEPING)
           {
-            cprintf("here\n") ; 
+            //cprintf("here\n") ; 
             p->turn = 1 ;
           }
           else{ 
@@ -484,15 +484,7 @@ scheduler(void)
           {
             if ( child_p->parent == p && child_p->is_thread==1 ) // && child_p->state == RUNNABLE
             {
-              // if ( child_p->state == RUNNABLE )
-              // {
-              //   if (cnt == p->turn)
-              //   {
-              //     SwichProc(child_p) ; 
-              //     break;  
-              //   }  
-              //   cnt++ ; 
-              // }
+              
               if ( cnt == p->turn )
               {
                 if (child_p->state == RUNNABLE)

@@ -3,17 +3,11 @@
 #include "user.h"
 #include "fcntl.h"
 
-
 lock_t* lock_thread;
 
-
-
-void add(void* arg1, void* arg2) {
+void Test_func(void* arg1, void* arg2) {
   lock_acquire(lock_thread);
-  int num1 = *(int*)arg1;
-  int num2 = *(int*)arg2;
-  printf(1, "this should print %d\n ", num1 + num2);
-  //sleep(10);
+  sleep(10);
   lock_release(lock_thread); 
   exit();
 }
@@ -22,15 +16,12 @@ int
 main(int argc, char *argv[])
 {
   lock_init(lock_thread) ; 
-  printf(1, "test executing threads with lock :\n");
-  int arg1 = 9, arg2 = 1 ; 
-  thread_create(&add, (void *)&arg1, (void *)&arg2);
-  int arg3 = 4 , arg4 = 2;
-  thread_create(&add, (void *)&arg3, (void *)&arg4);
   int arg5 = 7 ,  arg6 = 4;
-  thread_create(&add, (void *)&arg5, (void *)&arg6);
-  thread_join();
-  thread_join();
-  thread_join();
+  for(int i=0 ; i< 5 ; i++ )
+    thread_create(&Test_func , (void *)&arg5, (void *)&arg6);
+  for(int i=0 ; i< 5 ; i++ )
+    thread_join();
   exit() ; 
 }
+
+

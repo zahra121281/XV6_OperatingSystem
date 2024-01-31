@@ -330,6 +330,7 @@ join(void** stack)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+        //cprintf("process with pid=%d exited\n",p->pid);  
         p->parent->num_child-- ; 
         p->is_thread=0 ; 
         pid = p->pid;
@@ -411,7 +412,7 @@ clone(void* stack,void(*function)(void*,void*), void *first_argumant, void *seco
   thread_id=np->pid;
   acquire(&ptable.lock);
   np->state = RUNNABLE;
-  cprintf("in clone *** process with pid=%d created\n",np->pid);  
+  //cprintf("process with pid=%d created\n",np->pid);  
   release(&ptable.lock);
   //cprintf("clone finish ********** parent state :%d  parent turn : %d parent process name is : %s and number of children is %d\n",curproc->state,curproc->turn,curproc->name,curproc->num_child);  
   return thread_id;
@@ -452,7 +453,8 @@ scheduler(void)
     sti();
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {  
       if(p->state != RUNNABLE && !(p->state == SLEEPING  && p->num_child>0 ))
       {
         continue;
@@ -465,12 +467,15 @@ scheduler(void)
       {
         if ( p->turn == 0 )
         {
-          if(p->state == SLEEPING )
+          if(p->state == SLEEPING)
+          {
+            cprintf("here\n") ; 
             p->turn = 1 ;
-          //else{ 
-          SwichProc(p) ; 
-            
-          //}
+          }
+          else{ 
+            SwichProc(p) ; 
+            p->turn = (p->turn+1)%(p->num_child+1) ; 
+          }
         }
         if ( p->turn > 0 )
         {
@@ -479,21 +484,34 @@ scheduler(void)
           {
             if ( child_p->parent == p && child_p->is_thread==1 ) // && child_p->state == RUNNABLE
             {
-              if ( child_p->state == RUNNABLE )
+              // if ( child_p->state == RUNNABLE )
+              // {
+              //   if (cnt == p->turn)
+              //   {
+              //     SwichProc(child_p) ; 
+              //     break;  
+              //   }  
+              //   cnt++ ; 
+              // }
+              if ( cnt == p->turn )
               {
-                if (cnt == p->turn)
+                if (child_p->state == RUNNABLE)
                 {
                   SwichProc(child_p) ; 
-                  //cprintf("child state :%d parent state :%d ,parent turn : %d , cnt = %d\n",child_p->state,p->state ,p->turn , cnt) ; 
-                  
+                  p->turn = (p->turn+1)%(p->num_child+1); 
                   break;  
-                }  
-                cnt++ ; 
+                }
+                else if( child_p->state == ZOMBIE )
+                {
+                  p->turn = (p->turn+1)%(p->num_child+1); 
+                }
               }
+              cnt++ ;
             }
+
           }
         }
-        p->turn = (p->turn+1)%(p->num_child+1) ; 
+       // p->turn = (p->turn+1)%(p->num_child+1) ; 
       }
       else
       {

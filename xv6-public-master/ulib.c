@@ -133,7 +133,23 @@ int lock_init(lock_t *lk)
 
 void lock_acquire(lock_t *lk){
   while(xchg(&lk->flag, 1) != 0);
+  __sync_synchronize();
 }
+// void lock_acquire(lock_t *lk) {
+//   while (1) {
+//     while (xchg(&lk->flag, 1) != 0)
+//       ; // Spin until the lock is released by another process
+
+//     if (lk->pid == myproc()->pid) {
+//       // The current process already holds the lock, so break the loop
+//       return;
+//     }
+
+//     // The lock is acquired by another process, so we need to wait
+//     xchg(&lk->flag, 0); // Release the lock
+//     sleep(&lk->chan, &lk->lk_lock); // Sleep on the lock's sleep channel
+//   }
+// }
 
 void lock_release(lock_t *lk){
 	xchg(&lk->flag, 0);
